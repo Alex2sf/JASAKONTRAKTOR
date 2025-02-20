@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class KontraktorProfile extends Model
 {
     use HasFactory;
-
     protected $fillable = [
         'user_id',
         'foto_profile',
@@ -22,11 +21,18 @@ class KontraktorProfile extends Model
         'bidang_usaha',
         'dokumen_pendukung',
         'portofolio',
+        'status', // Tambahkan ini
+        'catatan_admin', // Tambahkan ini
     ];
 
     // Relasi ke model User
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function files()
+    {
+        return $this->hasMany(KontraktorFile::class);
     }
 }

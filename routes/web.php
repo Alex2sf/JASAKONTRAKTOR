@@ -4,10 +4,36 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KontraktorProfileController;
 use App\Http\Controllers\Admin\KontraktorApprovalController;
-// Route untuk tampilan
-Route::get('/', function () {
-    return view('welcome');
+use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\UserProfileController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\TaskInteractionController;
+
+Route::post('/task/{task}/like', [TaskInteractionController::class, 'likeTask'])->name('task.like');
+Route::post('/task/{task}/comment', [TaskInteractionController::class, 'commentTask'])->name('task.comment');
+Route::post('/task/{task}/interest', [TaskInteractionController::class, 'interestTask'])->name('task.interest');
+Route::get('/', [HomeController::class, 'index'])->name('homepage');
+Route::middleware('auth')->group(function () {
+    Route::get('/user/task', [TaskController::class, 'showTaskForm'])->name('user.task');
+    Route::post('/user/task/post', [TaskController::class, 'postTask'])->name('user.task.post');
 });
+Route::middleware('auth')->group(function () {
+    Route::get('/user/profile', [UserProfileController::class, 'showProfileForm'])->name('user.profile');
+    Route::post('/user/profile/save', [UserProfileController::class, 'saveProfile'])->name('user.profile.save');
+});
+Route::middleware(['auth', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/approve/{id}', [KontraktorApprovalController::class, 'showApprovalForm'])->name('admin.approve_kontraktor');
+    Route::put('/approve/{id}', [KontraktorApprovalController::class, 'approve'])->name('admin.approve_kontraktor');
+});
+
+
+
+// // Route untuk tampilan
+// Route::get('/', function () {
+//     return view('welcome');
+// });
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
@@ -23,11 +49,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
 });
 
 // Route untuk user
-Route::middleware('auth')->group(function () {
-    Route::get('/homepage', function () {
-        return view('homepage');
-    })->name('homepage');
-});
+// Route::middleware('auth')->group(function () {
+//     Route::get('/homepage', function () {
+//         return view('homepage');
+//     })->name('homepage');
+// });
 
 // Menampilkan semua data kontraktor (tidak memerlukan login)
 Route::get('/kontraktor/show', [KontraktorProfileController::class, 'showAll'])

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\KontraktorProfile;
 use Illuminate\Support\Facades\Auth;
+use App\Models\KontraktorFile;
 
 class KontraktorProfileController extends Controller
 {
@@ -21,6 +22,7 @@ class KontraktorProfileController extends Controller
         if (!$kontraktor) {
             return redirect()->route('kontraktor.dashboard')->with('error', 'Data tidak ditemukan.');
         }
+        $kontraktor = KontraktorProfile::with('files')->where('user_id', Auth::id())->first(); // Ambil data beserta file-file terkait
 
         return view('kontraktor.show', compact('kontraktor'));
     }
@@ -38,30 +40,44 @@ class KontraktorProfileController extends Controller
             'nama_perusahaan' => 'required|string|max:255',
             'nomor_npwp' => 'nullable|string|max:20',
             'bidang_usaha' => 'required|string|max:255',
-            'dokumen_pendukung' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
-            'portofolio' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'dokumen_pendukung.*' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // Validasi untuk banyak file
+            'portofolio.*' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', // Validasi untuk banyak file
         ]);
 
-        // Ambil atau buat profil berdasarkan user_id
+        // Simpan atau update profil kontraktor
         $kontraktorProfile = KontraktorProfile::updateOrCreate(
             ['user_id' => Auth::id()],
-            $request->except('foto_profile', 'dokumen_pendukung', 'portofolio') // Tidak perlu json_encode()
-        );// Upload foto profil
+            $request->except('foto_profile', 'dokumen_pendukung', 'portofolio')
+        );
+
+        // Upload foto profil (jika ada)
         if ($request->hasFile('foto_profile')) {
             $fotoPath = $request->file('foto_profile')->store('foto_profil', 'public');
-            $kontraktorProfile->foto_profile = strval($fotoPath); // Pastikan disimpan sebagai string
+            $kontraktorProfile->foto_profile = strval($fotoPath);
         }
 
-        // Upload dokumen pendukung
+        // Upload banyak dokumen pendukung
         if ($request->hasFile('dokumen_pendukung')) {
-            $dokumenPath = $request->file('dokumen_pendukung')->store('dokumen', 'public');
-            $kontraktorProfile->dokumen_pendukung = strval($dokumenPath); // Pastikan disimpan sebagai string
+            foreach ($request->file('dokumen_pendukung') as $file) {
+                $filePath = $file->store('dokumen', 'public');
+                KontraktorFile::create([
+                    'kontraktor_profile_id' => $kontraktorProfile->id,
+                    'file_path' => $filePath,
+                    'file_type' => 'dokumen_pendukung',
+                ]);
+            }
         }
 
-        // Upload portofolio
+        // Upload banyak portofolio
         if ($request->hasFile('portofolio')) {
-            $portofolioPath = $request->file('portofolio')->store('portofolio', 'public');
-            $kontraktorProfile->portofolio = strval($portofolioPath); // Pastikan disimpan sebagai string
+            foreach ($request->file('portofolio') as $file) {
+                $filePath = $file->store('portofolio', 'public');
+                KontraktorFile::create([
+                    'kontraktor_profile_id' => $kontraktorProfile->id,
+                    'file_path' => $filePath,
+                    'file_type' => 'portofolio',
+                ]);
+            }
         }
 
 

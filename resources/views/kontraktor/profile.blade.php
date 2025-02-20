@@ -84,20 +84,25 @@
                     </div>
 
                     <!-- Dokumen Pendukung -->
+                    <!-- Dokumen Pendukung -->
                     <div class="mt-3">
                         <label>Dokumen Pendukung (PDF/DOC)</label>
-                        <input type="file" name="dokumen_pendukung" class="form-control">
-                        @if(Auth::user()->kontraktorProfile && Auth::user()->kontraktorProfile->dokumen_pendukung)
-                            <p><a href="{{ asset('storage/' . Auth::user()->kontraktorProfile->dokumen_pendukung) }}" target="_blank">Lihat Dokumen</a></p>
+                        <input type="file" name="dokumen_pendukung[]" class="form-control" multiple>
+                        @if(Auth::user()->kontraktorProfile && Auth::user()->kontraktorProfile->files->where('file_type', 'dokumen_pendukung')->count() > 0)
+                            @foreach(Auth::user()->kontraktorProfile->files->where('file_type', 'dokumen_pendukung') as $file)
+                                <p><a href="{{ asset('storage/' . $file->file_path) }}" target="_blank">Lihat Dokumen</a></p>
+                            @endforeach
                         @endif
                     </div>
 
                     <!-- Portofolio -->
                     <div class="mt-3">
                         <label>Portofolio (Gambar)</label>
-                        <input type="file" name="portofolio" class="form-control">
-                        @if(Auth::user()->kontraktorProfile && Auth::user()->kontraktorProfile->portofolio)
-                            <p><img src="{{ asset('storage/' . Auth::user()->kontraktorProfile->portofolio) }}" class="img-thumbnail" width="200"></p>
+                        <input type="file" name="portofolio[]" class="form-control" multiple>
+                        @if(Auth::user()->kontraktorProfile && Auth::user()->kontraktorProfile->files->where('file_type', 'portofolio')->count() > 0)
+                            @foreach(Auth::user()->kontraktorProfile->files->where('file_type', 'portofolio') as $file)
+                                <p><img src="{{ asset('storage/' . $file->file_path) }}" class="img-thumbnail" width="200"></p>
+                            @endforeach
                         @endif
                     </div>
                     <div class="mt-4 text-center">
